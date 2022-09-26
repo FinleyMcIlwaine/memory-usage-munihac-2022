@@ -1,0 +1,13 @@
+packages:
+  heap-shapes
+  hiobe-index
+
+package *
+  ghc-options:
+    -Wall
+
+source-repository-package
+  location: https://gitlab.haskell.org/ghc/ghc-debug.git
+  subdir:   ghc-debug-brick
+  type:     git
+  tag:      f7034ea8cd58e0239d714c5fc298b595eb69b4eb

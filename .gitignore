@@ -1,0 +1,11 @@
+**/dist-newstyle
+hiobe-server
+hiobe-traffic
+hiobe-debugger
+hiobe.db
+*.eventlog
+*.eventlog.html
+*.hp
+**/*.DS_STORE
+
+slides
