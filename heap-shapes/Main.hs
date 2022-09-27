@@ -56,11 +56,11 @@ main = withGhcDebug $ do
   saveAndPause "example8" [Box example8]
 
   -- A strict map of Maybes
-  let !example9 = StrictMap.fromList $ [(n, integerToMaybe n) | n <- [0..num]]
+  let !example9 = StrictMap.fromList $ [(n-1, integerToMaybe $ n+1) | n <- [0..num]]
   saveAndPause "example9" [Box example9]
 
   -- A strict map of strict Maybes
-  let !example10 = StrictMap.fromList $ zip [0..num] (map integerToStrictMaybe [1..num])
+  let !example10 = StrictMap.fromList $ [(n-1, integerToStrictMaybe $ n+1) | n <- [0..num]]
   saveAndPause "example10" [Box example10]
 
   putStrLn "Done"
