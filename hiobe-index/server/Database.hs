@@ -48,8 +48,8 @@ listLangs conn = do
     q = "SELECT DISTINCT " <> toQuery Have <> " FROM survey_data"
 
 -- | /Interesting/ implementation of @listLangs@, does stream from the database.
-listLangs' :: Connection -> IO [Text]
-listLangs' conn = Set.toList <$>
+listLangsStream :: Connection -> IO [Text]
+listLangsStream conn = Set.toList <$>
     fold_ conn q Set.empty
       (\acc r -> pure $ insertAll (langRowToLangs r) acc)
   where
@@ -69,8 +69,8 @@ countLang conn (toQuery . toCol -> col) lang = do
     q = "SELECT " <> col <> " FROM survey_data WHERE " <> col <> " LIKE ?"
 
 -- | /Interesting/ @countLang@ implementation, does stream
-countLang' :: Connection -> LangType -> Text -> IO Integer
-countLang' conn (toQuery . toCol -> col) lang =
+countLangStream :: Connection -> LangType -> Text -> IO Integer
+countLangStream conn (toQuery . toCol -> col) lang =
     fold conn q ["%"<>lang<>"%"] 0 $
       \acc r -> pure $ acc + fromBool (lang `elem` langRowToLangs r)
   where
@@ -87,8 +87,8 @@ buildHist conn (toQuery . toCol -> col) = do
     q = "SELECT " <> col <> " FROM survey_data"
 
 -- | /Interesting/ @buildHist@ implementation, does stream
-buildHist' :: Connection -> LangType -> IO (Map Text Integer)
-buildHist' conn (toQuery . toCol -> col) =
+buildHistStream :: Connection -> LangType -> IO (Map Text Integer)
+buildHistStream conn (toQuery . toCol -> col) =
     fold_ conn q Map.empty $
       \acc r -> pure $ insertAll (langRowToLangs r) acc
   where

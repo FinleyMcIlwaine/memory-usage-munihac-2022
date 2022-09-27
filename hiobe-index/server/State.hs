@@ -1,5 +1,3 @@
-{-# LANGUAGE BangPatterns               #-}
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards            #-}
 
@@ -31,9 +29,7 @@ modify :: (HiobeState -> HiobeState) -> HiobeM ()
 modify g = ask >>= liftIO . atomically . flip modifyTVar g
 
 modify' :: (HiobeState -> HiobeState) -> HiobeM ()
-modify' !g = do
-  !tvar <- ask
-  liftIO . atomically $ modifyTVar' tvar g
+modify' g = ask >>= liftIO . atomically . flip modifyTVar' g
 
 data HiobeState =
   HiobeState
@@ -50,14 +46,6 @@ initState db =
   , reqCount = Map.empty
   }
 
-printState :: HiobeState -> IO ()
-printState HiobeState{..} = do
-  putStrLn "Request counts:"
-  forM_ (Map.toList reqCount) $ \(p,c) ->
-    putStrLn $ "Path " <> T.unpack p <> " was hit " <> show c <> " times"
-  forM_ (Map.toList langEngagements) $ \(l,c) ->
-    putStrLn $ "Language " <> T.unpack l <> " had " <> show c <> " engagements"
-
 putLang :: Text -> HiobeM ()
 putLang l =
   modify $ \HiobeState{..} ->
@@ -68,3 +56,12 @@ putReq p = do
   modify $ \HiobeState{..} ->
     HiobeState dbConn (Map.insertWith (+) p 1 reqCount) langEngagements
 
+
+-- TODO, use this somehow to evaluate thunks in state
+printState :: HiobeState -> IO ()
+printState HiobeState{..} = do
+  putStrLn "Request counts:"
+  forM_ (Map.toList reqCount) $ \(p,c) ->
+    putStrLn $ "Path " <> T.unpack p <> " was hit " <> show c <> " times"
+  forM_ (Map.toList langEngagements) $ \(l,c) ->
+    putStrLn $ "Language " <> T.unpack l <> " had " <> show c <> " engagements"

@@ -31,13 +31,10 @@ executable hiobe-server
     , Handlers.Utils
     , State
   build-depends:
-      base >=4.14.3.0
-    , attoparsec
+      base >=4.16.3.0
     , bytestring
-    , cassava
     , containers
     , directory
-    , file-embed
     , mtl
     , scotty
     , stm
@@ -46,20 +43,15 @@ executable hiobe-server
     , unordered-containers
     , vector
     , wai
-
-    , nothunks
-    , ghc-debug-stub
     
     , common
-  ghc-options:
-    -threaded -debug -rtsopts -finfo-table-map -fdistinct-constructor-tables
 
 executable hiobe-traffic
   import:           lang
   hs-source-dirs:   traffic
   main-is:          Main.hs
   build-depends:
-      base >=4.14.3.0
+      base >=4.16.3.0
     , common
     , req
     , random
@@ -75,7 +67,7 @@ library common
   exposed-modules:
     Common
   build-depends:
-      base >=4.14.3.0
+      base >=4.16.3.0
     , text
     , aeson
 
@@ -84,5 +76,6 @@ executable hiobe-debugger
   hs-source-dirs:   debugger
   main-is:          Main.hs
   build-depends:
-      base >=4.14.3.0
+      base >=4.16.3.0
     , ghc-debug-client
+    , containers

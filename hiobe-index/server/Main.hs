@@ -30,7 +30,7 @@ main = do
   dbExists <- doesFileExist dbPath
   unless dbExists $ do
     putStrLn $
-         "hiobe-index-server: couldn't file database.\n\n"
+         "hiobe-index-server: couldn't find database file.\n\n"
       ++ "    Usage: hiobe-index-server DATABASE_FILE (defaults to database/hiobe.db)\n"
     exitFailure
 
