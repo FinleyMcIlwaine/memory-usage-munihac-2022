@@ -5,8 +5,8 @@ module Database where
 import Control.Concurrent
 import Control.Monad.IO.Class
 import Data.List              qualified as List
-import Data.Map               (Map)
-import Data.Map               qualified as Map
+import Data.Map.Strict               (Map)
+import Data.Map.Strict               qualified as Map
 import Data.Maybe
 import Data.Set               (Set)
 import Data.Set               qualified as Set
@@ -72,7 +72,7 @@ countLang conn (toQuery . toCol -> col) lang = do
 countLangStream :: Connection -> LangType -> Text -> IO Integer
 countLangStream conn (toQuery . toCol -> col) lang =
     fold conn q ["%"<>lang<>"%"] 0 $
-      \acc r -> pure $ acc + fromBool (lang `elem` langRowToLangs r)
+      \acc r -> pure $! acc + fromBool (lang `elem` langRowToLangs r)
   where
     q :: Query
     q = "SELECT " <> col <> " FROM survey_data WHERE " <> col <> " LIKE ?"
@@ -90,7 +90,7 @@ buildHist conn (toQuery . toCol -> col) = do
 buildHistStream :: Connection -> LangType -> IO (Map Text Integer)
 buildHistStream conn (toQuery . toCol -> col) =
     fold_ conn q Map.empty $
-      \acc r -> pure $ insertAll (langRowToLangs r) acc
+      \acc r -> pure $! insertAll (langRowToLangs r) acc
   where
     q :: Query
     q = "SELECT " <> col <> " FROM survey_data"

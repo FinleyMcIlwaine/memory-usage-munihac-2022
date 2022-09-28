@@ -1,35 +1,23 @@
 module Main where
 
 import GHC.Debug.Client
-import GHC.Debug.Count
-import GHC.Debug.Profile
-import qualified Data.Map as Map
+import System.Environment
+import GHC.Debug.Snapshot
+
+snapshotName :: FilePath
+snapshotName = "my-snapshot.snapshot"
 
 main :: IO ()
-main = withDebuggeeConnect "ghc-debug.sock" debugger
+main = getSnapshot
+-- main = analyseSnapshot _ _
 
-debugger :: Debuggee -> IO ()
-debugger = runAnalysis analysis1 print
+getSnapshot :: IO ()
+getSnapshot = do
+  sock <- getEnv "GHC_DEBUG_SOCKET"
+  withDebuggeeConnect sock $ \d -> do
+    makeSnapshot d "my-snapshot.snapshot"
 
-printCensusByClosureType :: CensusByClosureType -> IO ()
-printCensusByClosureType c = mapM_ putStrLn $ do
-  (t,CS n s m) <- Map.toList c
-  return $ "Type: " ++ show t ++ ": " ++ show n ++ ", " ++ show s ++ ", " ++ show m
-
--- The most basic analysis
-analysis1 :: DebugM CensusStats
-analysis1 = do
-  rs <- gcRoots
-  count rs
-
--- Census by closure type
-analysis2 :: DebugM CensusByClosureType
-analysis2 = do
-  rs <- gcRoots
-  censusClosureType rs
-
--- Census by closure type, 2 level!
-analysis3 :: DebugM CensusByClosureType
-analysis3 = do
-  rs <- gcRoots
-  census2LevelClosureType rs
+analyseSnapshot :: DebugM a -> (a -> IO ()) -> IO ()
+analyseSnapshot analysis k = do
+  snapshotRun snapshotName $
+    runAnalysis analysis k

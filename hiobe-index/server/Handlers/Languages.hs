@@ -13,7 +13,7 @@ handlers = do
   get "/languages/list" $ do
     trackPath
     langs <- withDB $ \conn ->
-      listLangs conn
+      listLangsStream conn
     json langs
 
   get "/languages/count/have/:lang" $ do
@@ -21,7 +21,7 @@ handlers = do
     lang <- param "lang"
     trackLang lang
     count <- withDB $ \conn ->
-      countLang conn LangHave lang
+      countLangStream conn LangHave lang
     text . L.pack $ show count
 
   get "/languages/count/want/:lang" $ do
@@ -29,17 +29,17 @@ handlers = do
     lang <- param "lang"
     trackLang lang
     count <- withDB $ \conn ->
-      countLang conn LangWant lang
+      countLangStream conn LangWant lang
     text . L.pack $ show count
 
   get "/languages/hist/have" $ do
     trackPath
     langCounts <- withDB $ \conn ->
-      buildHist conn LangHave
+      buildHistStream conn LangHave
     json langCounts
 
   get "/languages/hist/want" $ do
     trackPath
     langCounts <- withDB $ \conn ->
-      buildHist conn LangWant
+      buildHistStream conn LangWant
     json langCounts

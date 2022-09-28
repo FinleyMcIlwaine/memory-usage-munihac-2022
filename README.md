@@ -5,7 +5,7 @@
 Understanding and analysing the memory usage of Haskell programs is a
 notoriously difficult yet important problem. Recent improvements to GHC's
 profiling capabilities, along with better tooling, has made it much easier to
-deeply and precisely analyze the memory usage characteristics of even large
+deeply and precisely analyse the memory usage characteristics of even large
 Haskell programs.
 
 This workshop aims to present two such tools that allow high and low level
@@ -23,6 +23,16 @@ Experienced Haskell programmers can expect to gain an understanding of exactly
 what these tools have to offer and the skills necessary to use these tools on
 their own Haskell programs.
 
+## Before The Workshop
+
+Make sure you have the tools installed and built. You need to use GHC 9.2.4 or
+greater. After that, run:
+```
+cabal build all
+cabal install eventlog2html
+```
+And everything should be ready to go.
+
 ## Workshop Outline
 
 ### Goal
@@ -30,7 +40,7 @@ their own Haskell programs.
 The primary goal of this workshop is for participants to gain experience and
 familiarity with the `eventlog2html` and `ghc-debug` memory profiling tools.
 
-### Prerequisites: Lazy Evaluation and Normal Forms
+### Prerequisites: Lazy Evaluation, Normal Forms, etc.
 
 A crucial step in the pursuit of understanding the memory usage of Haskell
 programs is understanding Haskell's semantics as a lazy programming language.
@@ -38,15 +48,11 @@ While thorough coverage of such semantics is outside the scope of this workshop,
 I do hope that much of what we cover will be approachable and enlightening to
 Haskell beginners and experts alike.
 
-There are plenty of fantastic resources on these topics out there, one of them
-being this excellent interactive
-[blog post by Well-Typed](https://well-typed.com/blog/2017/09/visualize-cbn/).
-
 ### A First Look at `ghc-debug`
 
 The `ghc-debug` style of debugging is, like Haskell, somewhat unique. In this
 style, we have a *debuggee* and a *debugger*. The debuggee is the application
-whose heap profile we would like to analyze. The debugger is the application
+whose heap profile we would like to analyse. The debugger is the application
 which will actually execute the analysis.
 
 Communication between the debuggee and debugger happens over a socket, where the
@@ -67,7 +73,7 @@ tools:
   executable terminal user interface application that can connect to any
   debuggee.
 
-These aren't all of the libraries involved, but they are the big three that we
+These aren't all of the packages involved, but they are the big three that we
 care about as users of `ghc-debug`.
 
 To get started in the workshop, we will be examining the example `heap-shapes`
@@ -78,15 +84,80 @@ workshop.
 
 ### The Haskell Is Obviously Better at Everything (HIOBE) Index
 
-The HIOBE Index server (in `hiobe-index/server`) is the application
-we would like to profile with the `eventlog2html` and `ghc-debug` tools. It is a
-simple [scotty](https://hackage.haskell.org/package/scotty) web server
-application that serves data from a sqlite database on various endpoints. We
-will generate fake traffic for the application which will cause interesting
-objects to build up on the heap.
+The HIOBE Index server (in `hiobe-index/server`) is the application we would
+like to profile with the `eventlog2html` and `ghc-debug` tools. It is a simple
+[scotty](https://hackage.haskell.org/package/scotty) web server application that
+serves data from a sqlite database on various endpoints. The database is already
+populated with over 70000 rows. We will generate fake traffic for the
+application which will cause interesting objects to build up on the heap.
 
 For a full description of the HIOBE Index, see
 [its README](./hiobe-index/README.md).
 
 We will spend the rest of the workshop analysing, understanding, and tuning the
 memory profile of the HIOBE Index server.
+
+If you want to give it a try, run the server with:
+```
+cabal run hiobe-server
+```
+You should see the classic scotty `Setting phasers to stun...` output if
+everything is okay.
+
+Then run the traffic with:
+```
+cabal run hiobe-traffic
+```
+Some output should start scrolling by reporting various requests to the server.
+
+#### Trying the `-s` flag
+
+We know this program has bad space behavior, because I wanted it to. However, we
+don't know how bad it is. We'll try to get a *very* high-level view of its
+profile by using the `-s` RTS flag, which prints memory usage statistics on
+program termination. This is usually a great place to start when profiling a
+Haskell program's space usage.
+
+In our case, we will find that there's nothing really obviously wrong with the
+reported memory usage, other than it perhaps being a little high. If we run the
+application for longer or shorter periods of time, however, the reported memory
+usage remains the same!
+
+#### Using `eventlog2html`
+
+But, as I said above, we *know* this program has space issues. And if we
+actually didn't know yet, we would find out when we tried to run the HIOBE
+server in production.
+
+We can dig deeper by having our program emit an
+[eventlog](https://downloads.haskell.org/ghc/latest/docs/users_guide/runtime_control.html#rts-eventlog)
+using the `-l` RTS option.
+
+However, to make the eventlog useful for `eventlog2html`, we need to supply
+another flag that enables heap profiling! To start, we'll use the
+[`-hT`](https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html#rts-options-for-heap-profiling)
+flag to tell the RTS to break down the heap profile by closure type.
+
+In the resulting profile, we see big spikes of allocations happening with
+`ARR_WORDS`, `THUNK`, and `:` closures:
+![area-chart](./assets/hiobe-hT-1.png)
+
+Based on our knowledge of the HIOBE server's function, we should be a little
+alarmed by these spikes, as they indicate some big in-memory computations
+happening that we didn't intend. Messing around in the various tabs some more,
+we'll see some very obvious leaks! But first, we'll try to get rid of these
+spikes. To do this, we'll use some more heap profiling facilities (in
+particular, the `-hi` RTS option) which will point us towards a fix.
+
+- The big ARR_WORDS spikes are fixed by streaming
+- The THUNK spikes are fixed by strict maps, with some strict application in the
+  accumulators also potentially helping out
+- State leaks fixed by strict modify in the tvar, strict maps, and strict
+  fields. It's interesting to do it in that order too, because the happen until
+  you finally use strict maps. Could also try using strict maps without strict
+  fields and showing that it still isn't being forced
+
+After all that (on the `no-thunky` tag of the repo), still leaking integers a
+little bit, and no source locs in `eventlog2html`!
+
+Use GHC Debug to get a snapshot

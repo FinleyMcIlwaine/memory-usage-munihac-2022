@@ -43,8 +43,12 @@ executable hiobe-server
     , unordered-containers
     , vector
     , wai
+
+    , ghc-debug-stub
     
     , common
+  ghc-options:
+    -eventlog -rtsopts -finfo-table-map -fdistinct-constructor-tables -threaded
 
 executable hiobe-traffic
   import:           lang

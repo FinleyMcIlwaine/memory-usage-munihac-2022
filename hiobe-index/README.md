@@ -4,11 +4,11 @@ The [TIOBE Index](https://www.tiobe.com/tiobe-index/) is a programming language
 popularity index. At the time of writing, the TIOBE Index has Haskell ranked at
 #43, behind D and LabVIEW (?). This is blasphemy and we shouldn't stand for it.
 
-The HIOBE Index is my rebuttal. It is a simple web application (in
-`server`) that stores (a subset of) the
+The HIOBE Index is my rebuttal. It is a simple web application (in `server`)
+that stores (a subset of) the
 [2022 Stack Overflow Developer Survey](https://survey.stackoverflow.co/2022/)
-results in a sqlite database. The database has a single table `survey_data`
-that looks like this:
+results in a sqlite database (over 70000 rows). The database has a single table
+`survey_data` that looks like this:
 ```sql
 CREATE TABLE IF NOT EXISTS "survey_data" (
     ResponseId INTEGER PRIMARY KEY AUTOINCREMENT,
