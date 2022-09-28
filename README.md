@@ -26,7 +26,7 @@ their own Haskell programs.
 ## Before The Workshop
 
 Make sure you have the tools installed and built. You need to use GHC 9.2.4 or
-greater. After that, run:
+greater. After that, in the root of this repository, run:
 ```
 cabal build all
 cabal install eventlog2html
@@ -66,7 +66,7 @@ tools:
 - [`ghc-debug-stub`](https://hackage.haskell.org/package/ghc-debug-stub): A
   library containing the functions you should include in your program to
   perform analysis with `ghc-debug` debuggers.
-- [`ghc-debug-client](https://hackage.haskell.org/package/ghc-debug-client): A
+- [`ghc-debug-client`](https://hackage.haskell.org/package/ghc-debug-client): A
   library containing useful functions for writing your own heap analysis
   scripts.
 - [`ghc-debug-brick`](https://hackage.haskell.org/package/ghc-debug-brick): An
@@ -142,22 +142,5 @@ In the resulting profile, we see big spikes of allocations happening with
 `ARR_WORDS`, `THUNK`, and `:` closures:
 ![area-chart](./assets/hiobe-hT-1.png)
 
-Based on our knowledge of the HIOBE server's function, we should be a little
-alarmed by these spikes, as they indicate some big in-memory computations
-happening that we didn't intend. Messing around in the various tabs some more,
-we'll see some very obvious leaks! But first, we'll try to get rid of these
-spikes. To do this, we'll use some more heap profiling facilities (in
-particular, the `-hi` RTS option) which will point us towards a fix.
-
-- The big ARR_WORDS spikes are fixed by streaming
-- The THUNK spikes are fixed by strict maps, with some strict application in the
-  accumulators also potentially helping out
-- State leaks fixed by strict modify in the tvar, strict maps, and strict
-  fields. It's interesting to do it in that order too, because the happen until
-  you finally use strict maps. Could also try using strict maps without strict
-  fields and showing that it still isn't being forced
-
-After all that (on the `no-thunky` tag of the repo), still leaking integers a
-little bit, and no source locs in `eventlog2html`!
-
-Use GHC Debug to get a snapshot
+For the rest of the workshop, we will use `eventlog2html` and `ghc-debug` to
+answer some very precise questions about the HIOBE server's memory profile.
