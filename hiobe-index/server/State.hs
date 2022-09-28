@@ -33,9 +33,9 @@ modify' g = ask >>= liftIO . atomically . flip modifyTVar' g
 
 data HiobeState =
   HiobeState
-  { dbConn          :: !(MVar Connection)
-  , reqCount        :: !(Map Text Integer)
-  , langEngagements :: !(Map Text Integer)
+  { dbConn          :: MVar Connection
+  , reqCount        :: Map Text Integer
+  , langEngagements :: Map Text Integer
   }
 
 initState :: MVar Connection -> HiobeState
@@ -48,12 +48,12 @@ initState db =
 
 putLang :: Text -> HiobeM ()
 putLang l =
-  modify' $ \HiobeState{..} ->
+  modify $ \HiobeState{..} ->
     HiobeState dbConn reqCount (Map.insertWith (+) l 1 langEngagements)
 
 putReq :: Text -> HiobeM ()
 putReq p = do
-  modify' $ \HiobeState{..} ->
+  modify $ \HiobeState{..} ->
     HiobeState dbConn (Map.insertWith (+) p 1 reqCount) langEngagements
 
 
