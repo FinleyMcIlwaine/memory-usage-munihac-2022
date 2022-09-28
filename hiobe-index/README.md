@@ -9,6 +9,7 @@ that stores (a subset of) the
 [2022 Stack Overflow Developer Survey](https://survey.stackoverflow.co/2022/)
 results in a sqlite database (over 70000 rows). The database has a single table
 `survey_data` that looks like this:
+
 ```sql
 CREATE TABLE IF NOT EXISTS "survey_data" (
     ResponseId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,50 +18,64 @@ CREATE TABLE IF NOT EXISTS "survey_data" (
     ConvertedCompYearly INTEGER
 );
 ```
+
 We can issue requests to the following endpoints of the web server:
-```
-POST /survey/respond
-```
-> Submit your own response to the HIOBE Index
+
+### `POST /survey/respond`
+
+Submit your own response to the HIOBE Index survey.
+
+Example request:
 
 ```
-GET /truth
+curl -X POST http://localhost:3000/survey/respond -d '
+{
+    "haveWorkedWith": ["python","java","go","erlang","lua","javascript","typescript","clojure"],
+    "wantToWorkWith": ["haskell"],
+    "yearlyComp": 50000
+}'
 ```
-> Serves truth
+
+Example response:
 
 ```
-GET /languages/list
+{
+    "message": "Thanks!",
+    "responseId": 73858
+}
 ```
-> List all languages stored in the database
 
-```
-GET /languages/count/have/:lang
-```
-> The number of survey respondants that have worked with `lang`
+### `GET /truth`
 
-```
-GET /languages/count/want/:lang
-```
-> The number of survey respondants that want to work with `lang`
+Serves truth.
 
-```
-GET /languages/hist/have
-```
-> A histogram (map from language to count) of the languages respondants have
-> worked with
+### `GET /languages/list`
 
-```
-GET /languages/hist/have
-```
-> A histogram (map from language to count) of the languages respondants want to
-> work with
+List all languages stored in the database.
+
+### `GET /languages/count/have/:lang`
+
+The number of survey respondants that have worked with `lang`.
+
+### `GET /languages/count/want/:lang`
+
+The number of survey respondants that want to work with `lang`.
+
+### `GET /languages/hist/have`
+
+A histogram of the languages respondants have worked with
+
+### `GET /languages/hist/have`
+
+A histogram of the languages respondants want to work with
+
+## Traffic Generation
 
 We want to make sure that the HIOBE Index makes Haskell look as good as we know
 it is, so we also have an executable application that generates traffic (in
 `traffic`) which automatically submits lots of honest survey responses to the
 HIOBE Index, and also generates some nice request traffic.
 
-Unfortunately, in some sick twist of fate, the HIOBE Index server application
-has been having some memory issues. In this portion of the workshop, we will
-analyse the HIOBE Index server application using `eventlog2html` and
-`ghc-debug`.
+Unfortunately, in a sick twist of fate, the HIOBE Index server application has
+been having some memory issues. In this portion of the workshop, we will analyse
+the HIOBE Index server application using `eventlog2html` and `ghc-debug`.

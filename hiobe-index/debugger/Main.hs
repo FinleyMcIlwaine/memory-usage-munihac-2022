@@ -1,8 +1,8 @@
 module Main where
 
 import GHC.Debug.Client
-import System.Environment
 import GHC.Debug.Snapshot
+import System.Environment
 
 snapshotName :: FilePath
 snapshotName = "my-snapshot.snapshot"
