@@ -3,13 +3,28 @@ module Main where
 import GHC.Debug.Client
 import GHC.Debug.Snapshot
 import System.Environment
+import Control.Concurrent (threadDelay)
 
 snapshotName :: FilePath
 snapshotName = "my-snapshot.snapshot"
 
 main :: IO ()
-main = getSnapshot
--- main = analyseSnapshot _ _
+-- main = getSnapshot
+main = do
+  sock <- getEnv "GHC_DEBUG_SOCKET"
+  withDebuggeeConnect sock $ \d -> do
+    putStrLn "pausing"
+    pause d
+    putStrLn "first pause done"
+    putStrLn "resuming"
+  threadDelay 1000000
+  withDebuggeeConnect sock $ \d -> do
+    putStrLn "pausing"
+    pause d
+    putStrLn "second pause done"
+    putStrLn "resuming"
+    putStrLn "done"
+
 
 getSnapshot :: IO ()
 getSnapshot = do
