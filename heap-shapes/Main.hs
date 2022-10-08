@@ -14,54 +14,48 @@ main :: IO ()
 main = withGhcDebug $ do
   putStr "Enter a number: "
   hFlush stdout
-  num <- readLn
+  !num <- readLn :: IO Integer
 
-  -- example0 is just the number... is this a thunk?
-  let example0 = num
-  saveAndPause "example0" [Box example0]
+  -- example 0 is a list
+  let xs = map (+1) [0..num]
+  saveAndPause "example0" [Box xs]
 
-  -- example1 is a thunk
-  let example1 = length [0..num]
+  -- example 1 is the same list, forced to WHNF by the bang pattern
+  let !example1 = xs
   saveAndPause "example1" [Box example1]
 
-  -- example2 is forced to WHNF by the bang pattern,
-  -- do we expect this to change example0?
-  let !example2 = length [0..num]
-  saveAndPause "example2" [Box example2, Box example0]
+  -- example 2 is the length of the list
+  let example2 = length xs
+  saveAndPause "example2" [Box example2]
 
-  -- A simple list structure as an arithmetic sequence, unforced
-  let example3 = [num-2..num+2]
-  saveAndPause "example3" [Box example3]
+  -- example 3 is the length, forced to WHNF. What do we expect this to do to the
+  -- list?
+  let !example3 = length xs
+  saveAndPause "example3" [Box example3, Box xs]
 
-  -- A simple list structure, but as an arithmetic sequence, forced
-  let !example4 = [num-2..num+2]
+  -- A lazy map
+  let example4 = LazyMap.fromList $ [(n-1,n+1) | n <- [0..num]]
   saveAndPause "example4" [Box example4]
 
-  -- Thunk... for now?
-  let example6 = length [-100..num]
+  -- A lazy map, forced to WHNF
+  let !example5 = LazyMap.fromList $ [(n-1, n+1) | n <- [0..num]]
+  saveAndPause "example5" [Box example5]
 
-  -- A simple function with a strict field, called on a thunk
-  let example5 !x = print x
-  saveAndPause "example5" [Box $ example5 example6]
-
-  -- Thunk?
+  -- A strict map, unforced
+  let example6 = StrictMap.fromList $ [(n-1, n+1) | n <- [0..num]]
   saveAndPause "example6" [Box example6]
 
-  -- A lazy map, forced to WHNF
-  let !example7 = LazyMap.fromList $ [(n-1,n+1) | n <- [0..num]]
+  -- A strict map, forced
+  let !example7 = StrictMap.fromList $ [(n-1, n+1) | n <- [0..num]]
   saveAndPause "example7" [Box example7]
 
-  -- A strict map, same definition
-  let !example8 = StrictMap.fromList $ [(n-1,n+1) | n <- [0..num]]
+  -- A strict map of Maybes, forced
+  let !example8 = StrictMap.fromList $ [(n-1, integerToMaybe $ n+1) | n <- [0..num]]
   saveAndPause "example8" [Box example8]
 
-  -- A strict map of Maybes
-  let !example9 = StrictMap.fromList $ [(n-1, integerToMaybe $ n+1) | n <- [0..num]]
+  -- A strict map of strict Maybes, forced
+  let !example9 = StrictMap.fromList $ [(n-1, integerToStrictMaybe $ n+1) | n <- [0..num]]
   saveAndPause "example9" [Box example9]
-
-  -- A strict map of strict Maybes
-  let !example10 = StrictMap.fromList $ [(n-1, integerToStrictMaybe $ n+1) | n <- [0..num]]
-  saveAndPause "example10" [Box example10]
 
   putStrLn "Done"
 

@@ -1,20 +1,7 @@
 packages:
   heap-shapes
   hiobe-index
-  ../../ghc-debug/stub
-  ../../ghc-debug/client
-  ../../ghc-debug/common
-  ../../ghc-debug/ghc-debug-brick
 
 package *
   ghc-options:
-    -Wall
-
-package ghc-debug-stub
-  flags: +trace
-
--- source-repository-package
---   location: https://gitlab.haskell.org/ghc/ghc-debug.git
---   subdir:   ghc-debug-brick
---   type:     git
---   tag:      f7034ea8cd58e0239d714c5fc298b595eb69b4eb
+    -Wall -finfo-table-map -fdistinct-constructor-tables

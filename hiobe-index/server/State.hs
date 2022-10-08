@@ -1,15 +1,17 @@
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards            #-}
 
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use <&>" #-}
+
 module State where
 
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Reader
-import Data.Map               (Map)
-import Data.Map               qualified as Map
+import Data.Map.Strict        (Map)
+import Data.Map.Strict        qualified as Map
 import Data.Text              (Text)
-import Data.Text              qualified as T
 
 import Database.SQLite.Simple
 
@@ -37,11 +39,11 @@ data HiobeState
     }
 
 initState :: MVar Connection -> HiobeState
-initState db =
+initState dbConn =
   HiobeState
-  { dbConn = db
+  { dbConn          = dbConn
   , langEngagements = Map.empty
-  , reqCount = Map.empty
+  , reqCount        = Map.empty
   }
 
 putLang :: Text -> HiobeM ()
@@ -53,13 +55,3 @@ putReq :: Text -> HiobeM ()
 putReq p = do
   modify $ \HiobeState{..} ->
     HiobeState dbConn (Map.insertWith (+) p 1 reqCount) langEngagements
-
-
--- TODO, use this somehow to evaluate thunks in state
-printState :: HiobeState -> IO ()
-printState HiobeState{..} = do
-  putStrLn "Request counts:"
-  forM_ (Map.toList reqCount) $ \(p,c) ->
-    putStrLn $ "Path " <> T.unpack p <> " was hit " <> show c <> " times"
-  forM_ (Map.toList langEngagements) $ \(l,c) ->
-    putStrLn $ "Language " <> T.unpack l <> " had " <> show c <> " engagements"

@@ -30,6 +30,7 @@ greater. After that, in the root of this repository, run:
 ```
 cabal build all
 cabal install eventlog2html
+cabal install ghc-debug-brick
 ```
 And everything should be ready to go.
 
@@ -131,10 +132,9 @@ server in production.
 
 We can dig deeper by having our program emit an
 [eventlog](https://downloads.haskell.org/ghc/latest/docs/users_guide/runtime_control.html#rts-eventlog)
-using the `-l` RTS option.
-
-However, to make the eventlog useful for `eventlog2html`, we need to supply
-another flag that enables heap profiling! To start, we'll use the
+using the `-l` RTS option. However, to make the eventlog useful for
+`eventlog2html`, we need to supply another flag that enables heap profiling! To
+start, we'll use the
 [`-hT`](https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html#rts-options-for-heap-profiling)
 flag to tell the RTS to break down the heap profile by closure type.
 

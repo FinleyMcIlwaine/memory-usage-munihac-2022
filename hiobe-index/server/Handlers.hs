@@ -1,8 +1,8 @@
 module Handlers (handlers) where
 
-import Data.Text.Lazy qualified as L
+import Data.Text.Lazy         qualified as L
 
-import Web.Scotty.Trans (ScottyT)
+import Web.Scotty.Trans
 
 import Handlers.Languages qualified as Languages
 import Handlers.Survey    qualified as Survey

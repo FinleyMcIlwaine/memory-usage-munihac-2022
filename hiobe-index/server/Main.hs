@@ -33,7 +33,8 @@ main = withGhcDebug $ do
   unless dbExists $ do
     putStrLn $
          "hiobe-index-server: couldn't find database file.\n\n"
-      ++ "    Usage: hiobe-index-server DATABASE_FILE (defaults to database/hiobe.db or hiobe-index/database/hiobe.db)\n"
+      ++ "    Usage: hiobe-index-server DATABASE_FILE (defaults to "
+      ++ "database/hiobe.db or hiobe-index/database/hiobe.db)\n"
     exitFailure
 
   dbPath <- head <$> filterM doesFileExist dbPaths

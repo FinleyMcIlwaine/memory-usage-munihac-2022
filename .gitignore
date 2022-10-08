@@ -4,3 +4,4 @@ hiobe_backup.db
 *.snapshot
 *.hp
 *.html
+.DS_Store

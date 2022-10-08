@@ -1,38 +1,41 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant <$>" #-}
+
 module Main where
 
-import GHC.Debug.Client
-import GHC.Debug.Snapshot
 import System.Environment
-import Control.Concurrent (threadDelay)
 
-snapshotName :: FilePath
-snapshotName = "my-snapshot.snapshot"
+import GHC.Debug.Client
+import GHC.Debug.Client.Search
+import GHC.Debug.Retainers
+import GHC.Debug.Snapshot
 
 main :: IO ()
--- main = getSnapshot
-main = do
-  sock <- getEnv "GHC_DEBUG_SOCKET"
-  withDebuggeeConnect sock $ \d -> do
-    putStrLn "pausing"
-    pause d
-    putStrLn "first pause done"
-    putStrLn "resuming"
-  threadDelay 1000000
-  withDebuggeeConnect sock $ \d -> do
-    putStrLn "pausing"
-    pause d
-    putStrLn "second pause done"
-    putStrLn "resuming"
-    putStrLn "done"
+main = getArgs >>= \case
+  ("snapshot":snapshotName:_) -> do
+    sock <- getEnv "GHC_DEBUG_SOCKET"
+    withDebuggeeConnect sock $
+      \d -> makeSnapshot d snapshotName
+  ("debug":snapshotName:_) -> do
+    putStrLn "debugging away.."
+    snapshotRun snapshotName analysis
+  _ -> putStrLn "bad arguments"
 
+analysis :: Debuggee -> IO ()
+analysis d = do
+  (g,rets) <- run d $ do
+    rs <- gcRoots
+    [rets] <- findRetainersOfConstructor (Just 1) rs "HiobeState"
+    loc <- addLocationToStack rets
 
-getSnapshot :: IO ()
-getSnapshot = do
-  sock <- getEnv "GHC_DEBUG_SOCKET"
-  withDebuggeeConnect sock $ \d -> do
-    makeSnapshot d "my-snapshot.snapshot"
+    let root = last rets
+    g <- buildHeapGraph Nothing root
+    return (g,[("HiobeState retainers", loc)])
 
-analyseSnapshot :: DebugM a -> (a -> IO ()) -> IO ()
-analyseSnapshot analysis k = do
-  snapshotRun snapshotName $
-    runAnalysis analysis k
+  displayRetainerStack rets
+  putStrLn "\n"
+
+  let numIntegers = length $ findConstructors "IS" g
+      numBins = length $ findConstructors "Bin" g
+  putStrLn $ "found " ++ show numIntegers ++ " integers"
+  putStrLn $ "found " ++ show numBins ++ " map nodes"
